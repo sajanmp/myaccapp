@@ -29,6 +29,7 @@ function AddAccHead() {
         }
 
         if (e.target.name === "type") {
+            console.log(e.target.value);
             obj.type = e.target.value;
         }
 
@@ -98,7 +99,7 @@ function AddAccHead() {
                     <div className="row mb-3">
                         <label for="type" className="form-label col-sm-2">Type</label>
                         <div className="col-sm-10">
-                            <select name="type" defaultValue = "" value={accHead.type} className="form-control" onClick={(e) => handleChange(e)}>
+                            <select name="type" value={accHead.type} className="form-control" onChange={(e) => handleChange(e)}>
                                 {types && types.map((item, index) => {
                                     return (
                                         <option key={item}>{item}</option>
