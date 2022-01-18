@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react'
 import AccHeads from './AccHeads'
-import { collection, addDoc, query, where, getDocs} from 'firebase/firestore/lite';
+import { collection, addDoc, query, where, getDocs } from 'firebase/firestore/lite';
 import { db } from '../config/firebase';
 
 function AddAccHead() {
-    const types = ["Cash", "Bank", "Income", "Expense", "Savings", "Debtors", "Creditors", "Assets", "Liabilities"]
+    const types = ["", "Cash", "Bank", "Income", "Expense", "Savings", "Debtors", "Creditors", "Assets", "Liabilities"]
 
     const accHeadsCollectionRef = collection(db, "accheads");
 
@@ -13,10 +13,11 @@ function AddAccHead() {
         type: '',
         op_debit: 0,
         op_credit: 0,
+        amt: 0,
         active: true
     }
 
-    const [accHead, setAccHead] = useState({ initialValue });
+    const [accHead, setAccHead] = useState(initialValue);
     const [state, setState] = useState("default");
 
 
@@ -36,14 +37,18 @@ function AddAccHead() {
         if (e.target.name === "op_debit") {
             obj.op_debit = e.target.value;
             if (obj.op_debit > 0)
-               obj.op_credit=0; 
+                obj.op_credit = 0;
         }
 
         if (e.target.name === "op_credit") {
             obj.op_credit = e.target.value;
             if (obj.op_credit > 0) {
-                obj.op_debit=0;
+                obj.op_debit = 0;
             }
+        }
+
+        if (e.target.name === "amt") {
+            obj.amt = e.target.value;
         }
 
         setAccHead(obj);
@@ -63,16 +68,27 @@ function AddAccHead() {
         }
 
         if (accHead.name === "") {
-           alert("Account Head not specified");
-           return;
+            alert("Account Head not specified");
+            return;
         }
-        const q = query(accHeadsCollectionRef, where("name",  "==", accHead.name))
+
+        const q = query(accHeadsCollectionRef, where("name", "==", accHead.name))
         const querySnapShot = await getDocs(q);
-        if (!querySnapShot.empty)
-        {
+        if (!querySnapShot.empty) {
             alert("Duplicate Entry");
             return;
         }
+
+/*
+        await addDoc(accHeadsCollectionRef, 
+            { name: accHead.name, 
+              type: accHead.type, 
+              op_debit: Number(accHead.op_debit), 
+              op_credit: Number(accHead.op_credit), 
+              amt : Number(accHead.amt),
+              active: true });
+*/
+
         await addDoc(accHeadsCollectionRef, accHead);
         setAccHead(initialValue);
     }
@@ -122,6 +138,14 @@ function AddAccHead() {
                         <div className="col-sm-10">
                             <input type="text" name="op_credit" className="form-control"
                                 id="op_credit" value={accHead.op_credit} onChange={(e) => handleChange(e)}></input>
+                        </div>
+                    </div>
+
+                    <div className="row mb-3">
+                        <label for="amt" className="form-label col-sm-2">Fixed Amount</label>
+                        <div className="col-sm-10">
+                            <input type="text" name="amt" className="form-control"
+                                id="amt" value={accHead.amt} onChange={(e) => handleChange(e)}></input>
                         </div>
                     </div>
 

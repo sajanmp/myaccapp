@@ -13,28 +13,28 @@ function Vouchers() {
 
     if (state === "default") {
         html =
-            <div>
-                <p>
-                    <button onClick={() => { setState("cr") }}>CASH RECEIPTS</button>
-                </p>
-                <p>
-                    <button onClick={() => { setState("cp") }}>CASH PAYMENTS</button>
-                </p>
-                <p>
-                    <button onClick={() => { setState("br") }}>BANK RECEIPTS</button>
-                </p>
-                <p>
-                    <button onClick={() => { setState("bp") }}>BANK PAYMENTS</button>
-                </p>
-                <p>
-                    <button onClick={() => { setState("jv") }}>JOURNAL</button>
-                </p>
-                <p>
-                    <button onClick={() => { setState("cv") }}>CONTRA</button>
-                </p>                
-                <p>
-                    <button onClick={() => { setState("back") }}>BACK</button>
-                </p>
+            <div className='container text-center pt-5'>
+                <div className="row mb-3">
+                    <button className="btn btn-primary btn-lg btn-block" onClick={() => { setState("cr") }}>CASH RECEIPTS</button>
+                </div>
+                <div className="row mb-3">
+                    <button className="btn btn-primary btn-lg btn-block" onClick={() => { setState("cp") }}>CASH PAYMENTS</button>
+                </div>
+                <div className="row mb-3">
+                    <button className="btn btn-primary btn-lg btn-block" onClick={() => { setState("br") }}>BANK RECEIPTS</button>
+                </div>
+                <div className="row mb-3">
+                    <button className="btn btn-primary btn-lg btn-block" onClick={() => { setState("bp") }}>BANK PAYMENTS</button>
+                </div>
+                <div className="row mb-3">
+                    <button className="btn btn-primary btn-lg btn-block" onClick={() => { setState("jv") }}>JOURNAL</button>
+                </div>
+                <div className="row mb-3">
+                    <button className="btn btn-primary btn-lg btn-block" onClick={() => { setState("cv") }}>CONTRA</button>
+                </div>                
+                <div className="row mb-3">
+                    <button className="btn btn-primary btn-lg btn-block" onClick={() => { setState("back") }}>BACK</button>
+                </div>
             </div>
     }
     

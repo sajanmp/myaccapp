@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react'
 import { collection, getDocs, addDoc, updateDoc, doc, deleteDoc} from 'firebase/firestore/lite';
 import { db } from './config/firebase'
 
+
 function Users() {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('')

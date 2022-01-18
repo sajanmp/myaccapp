@@ -13,6 +13,7 @@ function ModifyAccHead() {
         type: '',
         op_debit: 0,
         op_credit: 0,
+        amt: 0,
         active: true
     }
 
@@ -45,6 +46,14 @@ function ModifyAccHead() {
             if (obj.op_credit > 0) {
                 obj.op_debit = 0;
             }
+        }
+
+        if (e.target.name === "amt") {
+            obj.amt = e.target.value;
+        }
+
+        if (e.target.name === "active") {
+            obj.active = e.target.checked;
         }
 
         setAccHead(obj);
@@ -97,7 +106,16 @@ function ModifyAccHead() {
 
         try {
             const accHeadDoc = doc(db, "accheads", id);
-            await updateDoc(accHeadDoc, accHead);
+            
+            await updateDoc(accHeadDoc,
+                      { name: accHead.name, 
+                        type: accHead.type, 
+                        op_debit: Number(accHead.op_debit), 
+                        op_credit: Number(accHead.op_credit), 
+                        amt: Number(accHead.amt),
+                        active: accHead.active
+                     });
+
             setState("back")
         }
         catch (err) {
@@ -107,6 +125,9 @@ function ModifyAccHead() {
 
     const deleteAccHead = async (e) => {
         e.preventDefault();
+
+        if (window.confirm("Are you sure?") === false)
+            return;
 
         console.log(id);
 
@@ -138,7 +159,7 @@ function ModifyAccHead() {
         const getAccHeads = async () => {
             //const data = await getDocs(accHeadsCollectionRef);
 
-            const q = query(accHeadsCollectionRef,orderBy("name"))
+            const q = query(accHeadsCollectionRef, orderBy("name"))
 
             const data = await getDocs(q);
 
@@ -204,6 +225,23 @@ function ModifyAccHead() {
                         <div className="col-sm-10">
                             <input type="text" name="op_credit" className="form-control"
                                 id="op_credit" value={accHead.op_credit} onChange={(e) => handleChange(e)}></input>
+                        </div>
+                    </div>
+
+                    <div className="row mb-3">
+                        <label for="amt" className="form-label col-sm-2">Fixed Amount</label>
+                        <div className="col-sm-10">
+                            <input type="text" name="amt" className="form-control"
+                                id="amt" value={accHead.amt} onChange={(e) => handleChange(e)}></input>
+                        </div>
+                    </div>
+
+                    <div className="row mb-3">
+                        <label for="active" className="form-label col-sm-2">Active</label>
+                        <div className="col-sm-1">
+                            <input type="checkbox"  
+                                id="active" name = "active" checked = {accHead.active} value="Active"
+                                onChange={(e) => handleChange(e)}></input>
                         </div>
                     </div>
 

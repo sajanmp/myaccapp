@@ -2,7 +2,7 @@ import logo from './logo.svg';
 import './App.css';
 import React, { useEffect, useState } from 'react'
 import AccHeads from './components/AccHeads';
-import Vouchers from './components/Vouchers';
+import AddVoucher from './components/AddVoucher';
 import { db } from './config/firebase'
 
 function App() {
@@ -37,7 +37,7 @@ function App() {
   }
 
   if (state === "vouchers") {
-    html = <Vouchers />
+    html = <AddVoucher />
   }
 
   if (state === "ledger") {
