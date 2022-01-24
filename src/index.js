@@ -31,6 +31,7 @@ ReactDOM.render(
     <BrowserRouter>
       <Routes>
           <Route path="/" element={<App />}/>
+          <Route path="/myaccapp" element={<App />}/>
           <Route path="accheads" element={<AccHeads />} />
           <Route path="addacchead" element={<AddAccHead />} />
           <Route path="modifyacchead" element={<ModifyAccHead />} />
