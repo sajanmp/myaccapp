@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react'
-import { collection, addDoc, query, where, getDocs, orderBy } from 'firebase/firestore/lite';
+import { collection, doc, query, where, getDocs, orderBy, getDoc, deleteDoc, updateDoc } from 'firebase/firestore/lite';
 import { db } from '../config/firebase';
 import Moment from 'moment';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
-import App from "../App";
+import Ledger from './Ledger'
+import { useParams } from 'react-router';
 
-function AddVoucher() {
+function ModifyVoucher(props) {
     const types = ["", "Cash", "Bank", "Income", "Expense", "Savings", "Debtors", "Creditors", "Assets", "Liabilities"]
     const seriesList = ["CP", "BP", "BR", "CR", "CV", "JV"]
 
@@ -15,6 +16,10 @@ function AddVoucher() {
 
     Moment.locale = "en";
     Moment.defaultFormat = "DD-MM-YYYY";
+
+    const vouId = useParams();
+
+    console.log(vouId.id);
 
 
     //console.log(Moment(currDate).format("DD-MM-YYYY"));
@@ -36,7 +41,7 @@ function AddVoucher() {
     const [dbAccHeads, setDbAccHeads] = useState([]);
     const [crAccHeads, setCrAccHeads] = useState([]);
     const [state, setState] = useState("default");
-    const [series, setSeries] = useState("PV")
+    const [series, setSeries] = useState("PV");
     const [header, setHeader] = useState("");
 
     const findArrayElementByName = (array, name) => {
@@ -45,30 +50,6 @@ function AddVoucher() {
         })
     }
 
-    const addDays = (date, interval) => {
-        const dateMilli = date.getTime();
-        const endMilli = dateMilli + (interval * 1000 * 60 * 60 * 24);
-        const newDate = new Date(endMilli);
-        return newDate;
-    }
-
-
-    const getVouchers = async () => {
-        const start = new Date('2022-01-17')
-        const end = addDays(start, 1);
-
-
-        //const end = new Date('2022-01-18T00:00:00.000z');
-        const q = query(voucherCollectionRef, where("date", ">=", start), where("date", "<=", end))
-        const querySnapShot = await getDocs(q);
-        if (querySnapShot.empty) {
-            alert("no rows found");
-            return "";
-        }
-        querySnapShot.forEach((doc) => {
-            console.log(doc.id);
-        })
-    }
 
     const assignHeader = (ser) => {
 
@@ -180,25 +161,56 @@ function AddVoucher() {
 
     }
 
-    const createVoucher = async (e) => {
+    const findArrayElementById = (array, id) => {
+        return array.find((element) => {
+            return element.id === id;
+        })
+    }
+
+
+    const updateVoucher = async (e) => {
         e.preventDefault();
 
         if (!isDataClear())
             return;
 
-        var docRef = {};
+        const docRef = doc(db, "vouchers", vouId.id);
 
-        docRef.series = series;
-        docRef.date = voucher.date; //Moment(voucher.date, Moment.defaultFormat).toDate();
-        docRef.db_acc_id = voucher.db_acc_id;
-        docRef.cr_acc_id = voucher.cr_acc_id;
-        docRef.amt = Number(voucher.amt);
-        docRef.narr = (voucher.narr === undefined ? "" : voucher.narr);
+        await updateDoc(docRef,
+            {
+                series: voucher.series,
+                date: voucher.date,
+                db_acc_id: voucher.db_acc_id,
+                cr_acc_id: voucher.cr_acc_id,
+                amt: Number(voucher.amt),
+                narr: (voucher.narr === undefined ? "" : voucher.narr)
+            });
 
-        await addDoc(voucherCollectionRef, docRef);
 
-        setVoucher(initialValue);
+        setState("back")
+    }
 
+    const deleteVoucher = async (e) => {
+        e.preventDefault();
+
+        if (window.confirm("Are you sure?") === false)
+            return;
+
+        try {
+            const docRef = doc(db, "vouchers", vouId.id);
+            const docSnap = await getDoc(docRef);
+
+            if (!docSnap.exists()) {
+                alert("Document not found");
+                return;
+            }
+
+            await deleteDoc(docRef);
+            setState("back");
+        }
+        catch (err) {
+            alert(err);
+        }
     }
 
     const handleDateChange = (date) => {
@@ -209,34 +221,19 @@ function AddVoucher() {
         setVoucher(obj);
     }
 
-    const getAccHeadId = async (name) => {
-        const q = query(accHeadsCollectionRef, where("name", "==", name))
-        const querySnapShot = await getDocs(q);
-        if (querySnapShot.empty) {
-            return "";
-        }
-
-        var docId = "";
-        querySnapShot.forEach((doc) => {
-            docId = doc.id;
-            return;
-        })
-        return docId;
-    }
-
     const getDbAccHeads = async (ser) => {
         var q;
 
         if (ser === "CR") {
-            q = query(accHeadsCollectionRef, where("type", "==", "Cash"), where("active", "==", true), orderBy("type", "name"))
+            q = query(accHeadsCollectionRef, where("type", "==", "Cash"), where("active", "==", true), orderBy("name"))
         }
 
         if (ser === "BR") {
-            q = query(accHeadsCollectionRef, where("type", "==", "Bank"), where("active", "==", true), orderBy("type", "name"))
+            q = query(accHeadsCollectionRef, where("type", "==", "Bank"), where("active", "==", true), orderBy("name"))
         }
 
         if (ser === "CV") {
-            q = query(accHeadsCollectionRef, where("type", "in", ["Cash", "Bank"]), orderBy("type", "name"))
+            q = query(accHeadsCollectionRef, where("type", "in", ["Cash", "Bank"]), orderBy("name"))
         }
 
         if (ser === "JV" || ser === "CP" || ser === "BP") {
@@ -252,7 +249,7 @@ function AddVoucher() {
                 arr.push({ ...doc.data(), id: doc.id })
             return doc;
         })
-        setDbAccHeads(arr);
+        return arr;
     }
 
     const getCrAccHeads = async (ser) => {
@@ -282,32 +279,76 @@ function AddVoucher() {
             q = query(accHeadsCollectionRef, where("type", "not-in", ["Cash", "Bank"]), orderBy("type", "name"))
         }
 
-        const data = await getDocs(q);
+        try {
 
-        //setCrAccHeads(data.docs.map((doc) => ({ ...doc.data(), id: doc.id })))
-        var arr = [{ name: '', id: '' }];
-        data.docs.map((doc) => {
-            if (doc.data().active)
-                arr.push({ ...doc.data(), id: doc.id })
-            return doc;
-        })
-        setCrAccHeads(arr);
+            const data = await getDocs(q);
+
+            //setCrAccHeads(data.docs.map((doc) => ({ ...doc.data(), id: doc.id })))
+            var arr = [{ name: '', id: '' }];
+            data.docs.map((doc) => {
+                if (doc.data().active)
+                    arr.push({ ...doc.data(), id: doc.id })
+                return doc;
+            })
+            return arr;
+        }
+
+        catch (err) {
+            console.log(err);
+            return null;
+        }
+
     }
 
 
     useEffect(() => {
         let isMounted = true;
-
-        let defaultSeries = "CP";
-
-        if (isMounted) {
-            setSeries(defaultSeries);
-            assignHeader(defaultSeries);
-            getDbAccHeads(defaultSeries);
-            getCrAccHeads(defaultSeries);
-            getVouchers();
-            setState("default");
+        
+        const getVoucher = async (id) => {
+            const docRef = doc(db, "vouchers", id);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                let defaultSeries = docSnap.data().series;
+                const db_acc_name = "" //dbAccHead.name
+                const cr_acc_name = "" //crAccHead.name
+                const obj = {
+                    series: docSnap.data().series,
+                    date: docSnap.data().date.toDate(),
+                    db_acc_name: db_acc_name,
+                    cr_acc_name: cr_acc_name,
+                    db_acc_id: docSnap.data().db_acc_id,
+                    cr_acc_id: docSnap.data().cr_acc_id,
+                    amt: docSnap.data().amt,
+                    narr: docSnap.data().narr,
+                }
+                return obj;
+            }
+            return null;
         }
+
+        getVoucher(vouId.id).then(data => {
+            if (isMounted) {
+                setSeries(data.series);
+                assignHeader(data.series);
+                let dbAccHead;
+                let crAccHead;
+
+                getDbAccHeads(data.series).then(arr => {
+                    dbAccHead = findArrayElementById(arr, data.db_acc_id)
+                    data.db_acc_name = dbAccHead.name;
+                    setDbAccHeads(arr);
+                    getCrAccHeads(data.series).then(arr => {
+                        crAccHead = findArrayElementById(arr, data.cr_acc_id)
+                        data.cr_acc_name = crAccHead.name;
+                        setCrAccHeads(arr);
+                        setVoucher(data);
+                    });
+                });
+                
+                setState("default");
+            }
+        });
+
         return () => { isMounted = false }
     }, [])
 
@@ -320,7 +361,7 @@ function AddVoucher() {
     if (state === "default") {
         html =
             <div class="container">
-                <h1 className="text-center">Add {header} Voucher</h1>
+                <h1 className="text-center">Update {header} Voucher</h1>
                 <form method='post' action="#">
                     <div className="row mb-3">
                         <label for="type" className="form-label col-sm-2">Series</label>
@@ -386,8 +427,14 @@ function AddVoucher() {
 
 
                     <div class="text-center">
-                        <button className="btn btn-primary me-2" onClick={(e) => { createVoucher(e) }}>Save</button>
-                        <button className="btn btn-secondary" onClick={(e) => { setState("back") }}>Back</button>
+                        <button className="btn btn-primary me-2"
+                            onClick={(e) => { updateVoucher(e) }}>Update</button>
+
+                        <button className="btn btn-danger me-2"
+                            onClick={(e) => { deleteVoucher(e) }}>Delete</button>
+
+                        <button className="btn btn-secondary"
+                            onClick={(e) => { setState("back") }}>Back</button>
                     </div>
                 </form>
             </div>
@@ -395,7 +442,7 @@ function AddVoucher() {
 
     if (state === "back") {
 
-        html = <App />
+        html = <Ledger />
     }
 
     return (
@@ -405,4 +452,4 @@ function AddVoucher() {
     )
 }
 
-export default AddVoucher
+export default ModifyVoucher
