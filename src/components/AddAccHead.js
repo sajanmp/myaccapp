@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import AccHeads from './AccHeads'
 import { collection, addDoc, query, where, getDocs } from 'firebase/firestore/lite';
 import { db } from '../config/firebase';
+import {Link} from 'react-router-dom'
 
 function AddAccHead() {
     const types = ["", "Cash", "Bank", "Income", "Expense", "Savings", "Debtors", "Creditors", "Assets", "Liabilities"]
@@ -151,7 +152,9 @@ function AddAccHead() {
 
                     <div class="text-center">
                         <button className="btn btn-primary me-2" onClick={(e) => { createAccHead(e) }}>Save</button>
-                        <button className="btn btn-secondary" onClick={(e) => { setState("back") }}>Back</button>
+                        <div className="text-center btn-primary mb-3 mt-3">
+                            <Link className="text-white" to="/accheads" style={{ "text-decoration": "none" }}>Back</Link>
+                        </div>
                     </div>
                 </form>
             </div>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import AccHeads from './AccHeads'
 import { collection, updateDoc, doc, query, where, getDoc, getDocs, deleteDoc, orderBy } from 'firebase/firestore/lite';
 import { db } from '../config/firebase';
+import {Link} from 'react-router-dom'
 
 function ModifyAccHead() {
     const types = ["Cash", "Bank", "Income", "Expense", "Savings", "Debtors", "Creditors", "Assets", "Liabilities"]
@@ -176,6 +177,9 @@ function ModifyAccHead() {
     if (state === "default") {
         html =
             <div class="container">
+                 <div className="text-left mb-3 mt-3">
+                     <Link  to="/accheads" >Back</Link>
+                </div>
                 <h1 className="text-center">Modify Account Head</h1>
                 <form method='post' action="#">
                     <div className="row mb-3">
@@ -248,7 +252,7 @@ function ModifyAccHead() {
                     <div class="text-center">
                         <button className="btn btn-primary me-2" onClick={(e) => { updateAccHead(e) }}>Save</button>
                         <button className="btn btn-primary me-2" onClick={(e) => { deleteAccHead(e) }}>Delete</button>
-                        <button className="btn btn-secondary" onClick={(e) => { setState("back") }}>Back</button>
+
                     </div>
                 </form>
             </div>

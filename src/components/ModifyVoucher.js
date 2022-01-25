@@ -6,9 +6,9 @@ import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 import Ledger from './Ledger'
 import { useParams } from 'react-router';
+import {Link} from 'react-router-dom'
 
 function ModifyVoucher(props) {
-    const types = ["", "Cash", "Bank", "Income", "Expense", "Savings", "Debtors", "Creditors", "Assets", "Liabilities"]
     const seriesList = ["CP", "BP", "BR", "CR", "CV", "JV"]
 
     const voucherCollectionRef = collection(db, "vouchers");
@@ -43,6 +43,7 @@ function ModifyVoucher(props) {
     const [state, setState] = useState("default");
     const [series, setSeries] = useState("PV");
     const [header, setHeader] = useState("");
+    const [flag, setFlag] = useState(false);
 
     const findArrayElementByName = (array, name) => {
         return array.find((element) => {
@@ -82,8 +83,12 @@ function ModifyVoucher(props) {
             setSeries(e.target.value);
             obj.series = e.target.value;
             assignHeader(e.target.value);
-            getDbAccHeads(e.target.value);
-            getCrAccHeads(e.target.value);
+            getDbAccHeads(e.target.value).then(arr => {
+                setDbAccHeads(arr);
+            });
+            getCrAccHeads(e.target.value).then(arr => {
+                setCrAccHeads(arr);
+            });
         }
 
         if (e.target.name === "date") {
@@ -187,7 +192,7 @@ function ModifyVoucher(props) {
             });
 
 
-        setState("back")
+        setFlag(true) //Updation successfull
     }
 
     const deleteVoucher = async (e) => {
@@ -233,11 +238,11 @@ function ModifyVoucher(props) {
         }
 
         if (ser === "CV") {
-            q = query(accHeadsCollectionRef, where("type", "in", ["Cash", "Bank"]), orderBy("name"))
+            q = query(accHeadsCollectionRef, where("type", "in", ["Cash", "Bank"]), where("active", "==", true), orderBy("name"))
         }
 
         if (ser === "JV" || ser === "CP" || ser === "BP") {
-            q = query(accHeadsCollectionRef, where("type", "not-in", ["Cash", "Bank"]), orderBy("type", "name"))
+            q = query(accHeadsCollectionRef, where("type", "not-in", ["Cash", "Bank"]), where("active", "==", true), orderBy("type", "name"))
         }
 
         const data = await getDocs(q);
@@ -264,19 +269,19 @@ function ModifyVoucher(props) {
         }
 
         if (ser === "CR") {
-            q = query(accHeadsCollectionRef, where("type", "not-in", ["Cash", "Bank"]), orderBy("type", "name"))
+            q = query(accHeadsCollectionRef, where("type", "not-in", ["Cash", "Bank"]), where("active", "==", true), orderBy("type", "name"))
         }
 
         if (ser === "BR") {
-            q = query(accHeadsCollectionRef, where("type", "not-in", ["Cash", "Bank"]), orderBy("type", "name"))
+            q = query(accHeadsCollectionRef, where("type", "not-in", ["Cash", "Bank"]), where("active", "==", true), orderBy("type", "name"))
         }
 
         if (ser === "CV") {
-            q = query(accHeadsCollectionRef, where("type", "in", ["Cash", "Bank"]), orderBy("type", "name"))
+            q = query(accHeadsCollectionRef, where("type", "in", ["Cash", "Bank"]), where("active", "==", true), orderBy("name"))
         }
 
         if (ser === "JV") {
-            q = query(accHeadsCollectionRef, where("type", "not-in", ["Cash", "Bank"]), orderBy("type", "name"))
+            q = query(accHeadsCollectionRef, where("type", "not-in", ["Cash", "Bank"]), where("active", "==", true), orderBy("type", "name"))
         }
 
         try {
@@ -303,7 +308,7 @@ function ModifyVoucher(props) {
 
     useEffect(() => {
         let isMounted = true;
-        
+
         const getVoucher = async (id) => {
             const docRef = doc(db, "vouchers", id);
             const docSnap = await getDoc(docRef);
@@ -344,7 +349,7 @@ function ModifyVoucher(props) {
                         setVoucher(data);
                     });
                 });
-                
+
                 setState("default");
             }
         });
@@ -361,7 +366,10 @@ function ModifyVoucher(props) {
     if (state === "default") {
         html =
             <div class="container">
-                <h1 className="text-center">Update {header} Voucher</h1>
+                <div className="text-left mb-3 mt-3">
+                     <Link  to="/ledger" >Back</Link>
+                </div>
+               <h1 className="text-center">Update {header} Voucher</h1>
                 <form method='post' action="#">
                     <div className="row mb-3">
                         <label for="type" className="form-label col-sm-2">Series</label>
@@ -428,13 +436,13 @@ function ModifyVoucher(props) {
 
                     <div class="text-center">
                         <button className="btn btn-primary me-2"
-                            onClick={(e) => { updateVoucher(e) }}>Update</button>
+                            onClick={(e) => { updateVoucher(e) }} disabled={flag}>Update</button>
 
                         <button className="btn btn-danger me-2"
                             onClick={(e) => { deleteVoucher(e) }}>Delete</button>
 
-                        <button className="btn btn-secondary"
-                            onClick={(e) => { setState("back") }}>Back</button>
+                    
+
                     </div>
                 </form>
             </div>

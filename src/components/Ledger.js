@@ -1,15 +1,17 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useContext} from 'react'
 import { collection, query, where, getDocs, orderBy } from 'firebase/firestore/lite';
 import { db } from '../config/firebase';
 import DatePicker from 'react-datepicker';
 import Moment from 'moment';
-import ModifyVoucher from './ModifyVoucher';
-import App from '../App';
 import { Outlet, Link } from "react-router-dom";
+import { UserContext } from './CreateContext';
 
 function Ledger() {
     Moment.locale = "en"
     Moment.defaultFormat = "dd-MM-yyyy"
+
+    const {value, setValue} = useContext(UserContext);
+
 
     const initialValue = {
         fromDate: new Date(),
@@ -18,6 +20,8 @@ function Ledger() {
         accId: "",
         opBal: 0
     }
+
+
 
     const handleDateChange = (date, calledFrom) => {
         var obj = { ...params };
@@ -33,6 +37,8 @@ function Ledger() {
             obj.tillDate = newDate;
 
         setParams(obj);
+
+        setValue(obj);
     }
 
     const handleChange = (e) => {
@@ -45,6 +51,7 @@ function Ledger() {
             obj.opBal = data.op_debit > 0 ? data.op_debit : 0 - data.op_credit;
         }
         setParams(obj);
+        setValue(obj);
 
     }
 
@@ -69,10 +76,12 @@ function Ledger() {
         return newDate;
     }
 
+    /*
     const showVoucher = (e) => {
         setDocId(e.target.id);
         setState("voucher");
     }
+    */
 
     const [list, setList] = useState([])
     const [accHeads, setAccHeads] = useState([])
@@ -81,8 +90,10 @@ function Ledger() {
     const [docId, setDocId] = useState("");
 
 
+
     const voucherCollectionRef = collection(db, "vouchers");
     const accHeadsCollectionRef = collection(db, "accheads");
+
 
     const generateLedger = async (e) => {
         e.preventDefault();
@@ -142,7 +153,10 @@ function Ledger() {
         setList(arr);
     }
 
+
     useEffect(() => {
+        let isMounted = true;
+
         const getAccHeads = async () => {
             const q = query(accHeadsCollectionRef, orderBy("name"))
             const data = await getDocs(q);
@@ -156,10 +170,20 @@ function Ledger() {
             //setAccHeads(data.docs.map((doc) => ({ ...doc.data(), id: doc.id })))
         };
 
-        getAccHeads();
+        if (isMounted) {
+            getAccHeads();
 
-        handleDateChange(new Date(), "fromDate");
-        handleDateChange(new Date(), "tillDate");
+            handleDateChange(new Date(), "fromDate");
+            handleDateChange(new Date(), "tillDate");
+
+            if (value.fromDate !== undefined) {
+                console.log(value);
+               setParams(value);
+            }
+        }
+
+        return () => { isMounted = false }
+
     }, [])
 
     var html;
@@ -167,6 +191,9 @@ function Ledger() {
     if (state === "default") {
         html =
             <div class="container">
+                 <div className="text-left mb-3 mt-3">
+                     <Link  to="/" >Back</Link>
+                </div>
                 <h1 className="text-center">Ledger</h1>
                 <form method='post' action="#">
                     <div className="row mb-3">
@@ -189,7 +216,7 @@ function Ledger() {
                     <div className="row mb-3">
                         <label for="db_acc_name" className="form-label col-sm-2">Account Head</label>
                         <div className="col-sm-10">
-                            <select name="acc_head" value={params.acc_head} className="form-control"
+                            <select name="acc_head" value={params.accHead} className="form-control"
                                 onChange={(e) => handleChange(e)}>
                                 {accHeads && accHeads.map((obj, index) => {
                                     return (
@@ -199,14 +226,24 @@ function Ledger() {
                             </select>
                         </div>
                     </div>
+                    <div className="text-center btn-primary mb-3 mt-5">
+                        {/*
+                        <Link className="text-white"
+                            to={{
+                                pathname: `/ledgerreport?fromdate=${Moment(params.fromDate).format("YYYY-MM-DD")}
+                                                &tilldate=${Moment(params.tillDate).format("YYYY-MM-DD")}
+                                                &acchead=${params.accHead}`
+                            }}
+                            style={{ "text-decoration": "none" }}>
+                            Show
+                        </Link>
+                        */}
 
-                    <div class="text-center">
-                        <button className="btn btn-primary me-2"
+
+                        <button className="btn btn-primary me-2 pb-3"
                             onClick={(e) => { generateLedger(e) }}>Show
                         </button>
-                        <button className="btn btn-secondary"
-                            onClick={(e) => { setState("back") }}>Back
-                        </button>
+
                     </div>
                 </form>
                 {list ?
@@ -224,9 +261,13 @@ function Ledger() {
                             {list && list.map((obj, index) => {
                                 return (
                                     <tr>
-                                        <td id={obj.id}
-                                            onClick={(e) => { showVoucher(e) }}>
-                                            {obj.date}
+                                        <td id={obj.id}>
+                                            <Link
+                                                key={obj.id}
+                                                style={{ "text-decoration": "none" }}
+                                                to={{ pathname: `/modifyvoucher/${obj.id}` }}>
+                                                {obj.date}
+                                            </Link>
                                         </td>
                                         <td>
                                             {obj.accHead}
@@ -236,14 +277,6 @@ function Ledger() {
                                         <td>{obj.series}</td>
                                         <td>{obj.debit}</td>
                                         <td>{obj.credit}</td>
-                                        <td>
-                                            <Link
-                                                key={obj.id}
-                                                style={{ "text-decoration": "none" }}
-                                                to={{ pathname: `/modifyvoucher/${obj.id}`}}>
-                                                Modify
-                                            </Link>
-                                        </td>
                                     </tr>
                                 )
                             })}
@@ -254,13 +287,6 @@ function Ledger() {
             </div>
     }
 
-    if (state === "voucher") {
-        html = <ModifyVoucher doc={{ docId }}></ModifyVoucher>
-    }
-
-    if (state === "back") {
-        html = <App />
-    }
     return (
         <div>
             {html}

@@ -1,74 +1,53 @@
 import logo from './logo.svg';
 import './App.css';
-import { Outlet, Link } from "react-router-dom";
 import React, { useEffect, useState } from 'react'
 import AccHeads from './components/AccHeads';
+import AddAccHead from './components/AddAccHead';
+import ModifyAccHead from './components/ModifyAccHead';
 import AddVoucher from './components/AddVoucher';
 import Ledger from './components/Ledger';
+import ModifyVoucher from './components/ModifyVoucher';
+import LedgerReport from './components/LedgerReport';
+import Test from './components/test'
+import Main from './components/Main'
+import { UserContext } from './components/CreateContext';
+import {
+  Route,
+  Routes,
+} from "react-router-dom";
+
 
 function App() {
-  const [state, setState] = useState("");
+  //const [value, setValue] = useState("hello from context");
+  const [value, setValue] = useState({});
+  
+
 
   useEffect(() => {
-    setState("default")
-  }, [])
-
-
-  var html;
-
-
-  if (state === "default") {
-    html =
-      <div className='container text-center mt-5'>
-        <div className="row mb-3">
-          <button className='btn btn-primary btn-lg btn-block' onClick={() => { setState("accheads") }}>ACCOUNT HEADS</button>
-        </div>
-        <div className="row mb-3">
-          <button className='btn btn-primary btn-lg btn-block' onClick={() => { setState("vouchers") }}>VOUCHERS</button>
-        </div>
-        <div className="row mb-3">
-          <button className='btn btn-primary btn-lg btn-block' onClick={() => { setState("ledger") }}>LEDGER</button>
-        </div>
-        <div className="row mb-3">
-          <button className='btn btn-primary btn-lg btn-block' onClick={() => { setState("balance") }}>BALANCE</button>
-        </div>
-      </div>
-  }
-
-  if (state === "accheads") {
-    html = <AccHeads />
-  }
-
-  if (state === "vouchers") {
-    html = <AddVoucher />
-  }
-
-  if (state === "ledger") {
-    html = <Ledger />
-  }
-
-  if (state === "balance") {
-    html = <h1>Balance</h1>
-  }
+    let isMounted = true;
+    console.log(isMounted);
+    return () => {
+      isMounted = false;
+    }
+  })
 
   return (
-    <>
-      <div className="container">
-        <div className ="text-center btn-primary mb-3 mt-5">
-          <Link className="text-white" to="/accheads" style={{"text-decoration":"none"}}>Account Heads</Link>
-        </div>
-        <div className="text-center btn-primary mb-3">
-          <Link className="text-white" to="/vouchers" style={{"text-decoration":"none"}}>Voucher</Link>
-        </div>
-        <div className="text-center btn-primary mb-3">
-          <Link className="text-white" to="/ledger" style={{"text-decoration":"none"}}>Ledger</Link>
-        </div>
-      </div>
-      <Outlet />
-    </>
-  )
-
-
+    <div className="container">
+      <UserContext.Provider value={{value,setValue}}>
+        <Routes>
+          <Route path="/" element={<Main />} />
+          <Route path="/test" element={<Test />} />
+          <Route path="accheads" element={<AccHeads />} />
+          <Route path="addacchead" element={<AddAccHead />} />
+           <Route path="modifyacchead" element={<ModifyAccHead />} />
+          <Route path="vouchers" element={<AddVoucher />} />
+          <Route path="ledger" element={<Ledger />} />
+          <Route path="modifyvoucher/:id" element={<ModifyVoucher />} />
+          <Route path="ledgerreport" element={<LedgerReport />} />
+        </Routes>
+      </UserContext.Provider>
+    </div>
+  );
 }
 
 export default App;

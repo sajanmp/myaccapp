@@ -5,9 +5,9 @@ import Moment from 'moment';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 import App from "../App";
+import {Link} from 'react-router-dom'
 
 function AddVoucher() {
-    const types = ["", "Cash", "Bank", "Income", "Expense", "Savings", "Debtors", "Creditors", "Assets", "Liabilities"]
     const seriesList = ["CP", "BP", "BR", "CR", "CV", "JV"]
 
     const voucherCollectionRef = collection(db, "vouchers");
@@ -228,19 +228,19 @@ function AddVoucher() {
         var q;
 
         if (ser === "CR") {
-            q = query(accHeadsCollectionRef, where("type", "==", "Cash"), where("active", "==", true), orderBy("type", "name"))
+            q = query(accHeadsCollectionRef, where("type", "==", "Cash"), where("active", "==", true), orderBy("name"))
         }
 
         if (ser === "BR") {
-            q = query(accHeadsCollectionRef, where("type", "==", "Bank"), where("active", "==", true), orderBy("type", "name"))
+            q = query(accHeadsCollectionRef, where("type", "==", "Bank"), where("active", "==", true), orderBy("name"))
         }
 
         if (ser === "CV") {
-            q = query(accHeadsCollectionRef, where("type", "in", ["Cash", "Bank"]), orderBy("type", "name"))
+            q = query(accHeadsCollectionRef, where("type", "in", ["Cash", "Bank"]), where("active", "==", true),orderBy("name"))
         }
 
         if (ser === "JV" || ser === "CP" || ser === "BP") {
-            q = query(accHeadsCollectionRef, where("type", "not-in", ["Cash", "Bank"]), orderBy("type", "name"))
+            q = query(accHeadsCollectionRef, where("type", "not-in", ["Cash", "Bank"]), where("active", "==", true), orderBy("type", "name"))
         }
 
         const data = await getDocs(q);
@@ -267,19 +267,19 @@ function AddVoucher() {
         }
 
         if (ser === "CR") {
-            q = query(accHeadsCollectionRef, where("type", "not-in", ["Cash", "Bank"]), orderBy("type", "name"))
+            q = query(accHeadsCollectionRef, where("type", "not-in", ["Cash", "Bank"]), where("active", "==", true),orderBy("type","name"))
         }
 
         if (ser === "BR") {
-            q = query(accHeadsCollectionRef, where("type", "not-in", ["Cash", "Bank"]), orderBy("type", "name"))
+            q = query(accHeadsCollectionRef, where("type", "not-in", ["Cash", "Bank"]), where("active", "==", true), orderBy("type","name"))
         }
 
         if (ser === "CV") {
-            q = query(accHeadsCollectionRef, where("type", "in", ["Cash", "Bank"]), orderBy("type", "name"))
+            q = query(accHeadsCollectionRef, where("type", "in", ["Cash", "Bank"]), where("active", "==", true), orderBy("name"))
         }
 
         if (ser === "JV") {
-            q = query(accHeadsCollectionRef, where("type", "not-in", ["Cash", "Bank"]), orderBy("type", "name"))
+            q = query(accHeadsCollectionRef, where("type", "not-in", ["Cash", "Bank"]), where("active", "==", true), orderBy("type", "name"))
         }
 
         const data = await getDocs(q);
@@ -320,6 +320,9 @@ function AddVoucher() {
     if (state === "default") {
         html =
             <div class="container">
+                 <div className="text-left mb-3 mt-3">
+                     <Link  to="/" >Back</Link>
+                </div>
                 <h1 className="text-center">Add {header} Voucher</h1>
                 <form method='post' action="#">
                     <div className="row mb-3">
@@ -387,8 +390,11 @@ function AddVoucher() {
 
                     <div class="text-center">
                         <button className="btn btn-primary me-2" onClick={(e) => { createVoucher(e) }}>Save</button>
-                        <button className="btn btn-secondary" onClick={(e) => { setState("back") }}>Back</button>
                     </div>
+
+                    <div className="text-center btn-primary mb-3 mt-3">
+                            <Link className="text-white" to="/ledger" style={{ "text-decoration": "none" }}>Ledger</Link>
+                        </div>
                 </form>
             </div>
     }
