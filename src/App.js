@@ -36,6 +36,8 @@ function App() {
       <UserContext.Provider value={{value,setValue}}>
         <Routes>
           <Route path="/" element={<Main />} />
+          <Route path="test" element={<Test />} />
+          <Route path="myaccapp" element={<Main />} />
           <Route path="/test" element={<Test />} />
           <Route path="accheads" element={<AccHeads />} />
           <Route path="addacchead" element={<AddAccHead />} />

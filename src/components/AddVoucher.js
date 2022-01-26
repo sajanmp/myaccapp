@@ -5,10 +5,15 @@ import Moment from 'moment';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 import App from "../App";
-import {Link} from 'react-router-dom'
+import { Link } from 'react-router-dom'
+import { useLocation } from 'react-router-dom'
 
 function AddVoucher() {
     const seriesList = ["CP", "BP", "BR", "CR", "CV", "JV"]
+
+    const search = useLocation().search;
+
+    const calledFrom = new URLSearchParams(search).get('calledfrom');
 
     const voucherCollectionRef = collection(db, "vouchers");
     const accHeadsCollectionRef = collection(db, "accheads");
@@ -236,7 +241,7 @@ function AddVoucher() {
         }
 
         if (ser === "CV") {
-            q = query(accHeadsCollectionRef, where("type", "in", ["Cash", "Bank"]), where("active", "==", true),orderBy("name"))
+            q = query(accHeadsCollectionRef, where("type", "in", ["Cash", "Bank"]), where("active", "==", true), orderBy("name"))
         }
 
         if (ser === "JV" || ser === "CP" || ser === "BP") {
@@ -267,11 +272,11 @@ function AddVoucher() {
         }
 
         if (ser === "CR") {
-            q = query(accHeadsCollectionRef, where("type", "not-in", ["Cash", "Bank"]), where("active", "==", true),orderBy("type","name"))
+            q = query(accHeadsCollectionRef, where("type", "not-in", ["Cash", "Bank"]), where("active", "==", true), orderBy("type", "name"))
         }
 
         if (ser === "BR") {
-            q = query(accHeadsCollectionRef, where("type", "not-in", ["Cash", "Bank"]), where("active", "==", true), orderBy("type","name"))
+            q = query(accHeadsCollectionRef, where("type", "not-in", ["Cash", "Bank"]), where("active", "==", true), orderBy("type", "name"))
         }
 
         if (ser === "CV") {
@@ -320,8 +325,12 @@ function AddVoucher() {
     if (state === "default") {
         html =
             <div class="container">
-                 <div className="text-left mb-3 mt-3">
-                     <Link  to="/" >Back</Link>
+                <div className="text-left mb-3 mt-3">
+                    {calledFrom ?
+                        <Link to="/ledger" >Back</Link> :
+                        <Link to="/" >Back</Link>
+                    }
+
                 </div>
                 <h1 className="text-center">Add {header} Voucher</h1>
                 <form method='post' action="#">
@@ -392,9 +401,6 @@ function AddVoucher() {
                         <button className="btn btn-primary me-2" onClick={(e) => { createVoucher(e) }}>Save</button>
                     </div>
 
-                    <div className="text-center btn-primary mb-3 mt-3">
-                            <Link className="text-white" to="/ledger" style={{ "text-decoration": "none" }}>Ledger</Link>
-                        </div>
                 </form>
             </div>
     }

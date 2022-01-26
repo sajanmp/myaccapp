@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext} from 'react'
+import React, { useState, useEffect, useContext } from 'react'
 import { collection, query, where, getDocs, orderBy } from 'firebase/firestore/lite';
 import { db } from '../config/firebase';
 import DatePicker from 'react-datepicker';
@@ -10,7 +10,7 @@ function Ledger() {
     Moment.locale = "en"
     Moment.defaultFormat = "dd-MM-yyyy"
 
-    const {value, setValue} = useContext(UserContext);
+    const { value, setValue } = useContext(UserContext);
 
 
     const initialValue = {
@@ -97,62 +97,129 @@ function Ledger() {
 
     const generateLedger = async (e) => {
         e.preventDefault();
+
         const tillDate = addDays(params.tillDate, 1);
-        const q = query(voucherCollectionRef, where("date", "<", tillDate), orderBy("date"))
-        const data = await getDocs(q);
-        const arr = [];
 
+        const debitVouchers = async () => {
+            const q = query(voucherCollectionRef,
+                where("date", "<", tillDate),
+                where("db_acc_id", "==", params.accId),
+                orderBy("date"))
+            const data = await getDocs(q);
+            console.log("1");
+            return data.docs;
+        }
 
-        var runningBal = params.opBal;
-        var opFlag = true;
+        const creditVouchers = async () => {
+            const q = query(voucherCollectionRef,
+                where("date", "<", tillDate),
+                where("cr_acc_id", "==", params.accId),
+                orderBy("date"))
+            const data = await getDocs(q);
+            console.log("2");
+            return data.docs;
+        }
 
-        data.docs.map((doc) => {
-            if (doc.data().db_acc_id === params.accId || doc.data().cr_acc_id === params.accId) {
-                let date = doc.data().date.toDate();
-                if (date >= params.fromDate && date < tillDate) {
-                    if (opFlag) {
-                        if (runningBal !== 0) {
-                            arr.push({
-                                id: 0,
-                                date: Moment(params.fromDate).format("DD-MM-YYYY"),
-                                series: "",
-                                accHead: "Opening Balance",
-                                debit: runningBal > 0 ? runningBal : null,
-                                credit: runningBal < 0 ? 0 - runningBal : null,
-                                narr: "",
-                                runningBal: runningBal
-                            })
-                        }
-                        opFlag = false;
-                    }
-                }
-                const dbAccHead = findArrayElementById(accHeads, doc.data().db_acc_id);
-                const crAccHead = findArrayElementById(accHeads, doc.data().cr_acc_id);
-                const accHead = dbAccHead.name === params.accHead ? crAccHead.name : dbAccHead.name;
-                const debit = dbAccHead.name === params.accHead ? doc.data().amt : null;
-                const credit = crAccHead.name === params.accHead ? doc.data().amt : null;
-                if (debit != null)
-                    runningBal = runningBal + debit
-                else
-                    runningBal = runningBal - credit
-                if (date >= params.fromDate && date <= tillDate) {
-                    arr.push({
-                        id: doc.id,
-                        date: Moment(date).format("DD-MM-YYYY"),
-                        series: doc.data().series,
+        debitVouchers().then((dbarr) => {
+            creditVouchers().then((crarr) => {
+                console.log(dbarr);
+                console.log(crarr);
+                const joinedArr = dbarr.concat(crarr);
+                var unionArr = [];
+                joinedArr.map((obj) => {
+                    const dbAccHead = findArrayElementById(accHeads, obj.data().db_acc_id);
+                    const crAccHead = findArrayElementById(accHeads, obj.data().cr_acc_id);
+                    const accHead = dbAccHead.name === params.accHead ? crAccHead.name : dbAccHead.name;
+                    const debit = dbAccHead.name === params.accHead ? obj.data().amt : null;
+                    const credit = crAccHead.name === params.accHead ? obj.data().amt : null;
+                    unionArr.push({
+                        id: obj.id,
+                        date: obj.data().date,
+                        series: obj.data().series,
                         accHead: accHead,
                         debit: debit,
                         credit: credit,
-                        narr: doc.data().narr,
-                        runningBal: runningBal
+                        narr: obj.data().narr
                     })
-                }
-            }
-            return doc;
-        })
-        setList(arr);
-    }
+                    //unionArr.push(obj.data());
+                    return obj;
+                })
 
+                console.log(unionArr);
+
+                unionArr.sort((a, b) => {
+                    var dateA = new Date(a.date.toDate());
+                    var dateB = new Date(b.date.toDate());
+                    return dateA - dateB; //ascending order
+                    //return dateB - dateA; //descending order
+                })
+
+
+
+                /*
+                const q = query(voucherCollectionRef, where("date", "<", tillDate), orderBy("date"))
+                const data = await getDocs(q);
+                */
+
+                const arr = [];
+
+
+                var runningBal = params.opBal;
+                var opFlag = true;
+
+                unionArr.map((doc) => {
+                    let date = doc.date.toDate();
+                    if (date >= params.fromDate && date < tillDate) {
+                        if (opFlag) {
+                            if (runningBal !== 0) {
+                                arr.push({
+                                    id: 0,
+                                    date: Moment(params.fromDate).format("DD-MM-YYYY"),
+                                    series: "",
+                                    accHead: "Opening Balance",
+                                    debit: runningBal > 0 ? runningBal : null,
+                                    credit: runningBal < 0 ? 0 - runningBal : null,
+                                    narr: "",
+                                    runningBal: runningBal
+                                })
+                            }
+                            opFlag = false;
+                        }
+                    }
+
+                    /*
+                    const dbAccHead = findArrayElementById(accHeads, doc.db_acc_id);
+                    const crAccHead = findArrayElementById(accHeads, doc.cr_acc_id);
+                    
+                    const accHead = dbAccHead.name === params.accHead ? crAccHead.name : dbAccHead.name;
+                    const debit = dbAccHead.name === params.accHead ? doc.amt : null;
+                    const credit = crAccHead.name === params.accHead ? doc.amt : null;
+*/
+
+                    if (doc.debit != null)
+                        runningBal = runningBal + doc.debit
+                    else
+                        runningBal = runningBal - doc.credit
+
+                    if (date >= params.fromDate && date <= tillDate) {
+                        arr.push({
+                            id: doc.id,
+                            date: Moment(date).format("DD-MM-YYYY"),
+                            series: doc.series,
+                            accHead: doc.accHead,
+                            debit: doc.debit,
+                            credit: doc.credit,
+                            narr: doc.narr,
+                            runningBal: runningBal
+                        })
+                    }
+                    return doc;
+                })
+                setList(arr);
+            })
+
+        })
+    }
 
     useEffect(() => {
         let isMounted = true;
@@ -178,7 +245,7 @@ function Ledger() {
 
             if (value.fromDate !== undefined) {
                 console.log(value);
-               setParams(value);
+                setParams(value);
             }
         }
 
@@ -191,8 +258,13 @@ function Ledger() {
     if (state === "default") {
         html =
             <div class="container">
-                 <div className="text-left mb-3 mt-3">
-                     <Link  to="/" >Back</Link>
+                <div className="d-flex">
+                    <div className="col-md-6">
+                        <Link to="/" >Back</Link>
+                    </div>
+                    <div className="col-md-6 text-end me-3">
+                        <Link to ="/vouchers?calledfrom=ledger">Create Voucher</Link>
+                    </div>
                 </div>
                 <h1 className="text-center">Ledger</h1>
                 <form method='post' action="#">
@@ -226,7 +298,7 @@ function Ledger() {
                             </select>
                         </div>
                     </div>
-                    <div className="text-center btn-primary mb-3 mt-5">
+                    <div className="text-center mb-2 mt-5">
                         {/*
                         <Link className="text-white"
                             to={{
