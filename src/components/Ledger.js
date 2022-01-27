@@ -319,21 +319,21 @@ function Ledger() {
                     </div>
                 </form>
                 {list ?
-                    <table class="table">
+                    <table class="table table-bordered">
                         <thead>
                             <tr>
-                                <th>Date</th>
-                                <th>Account Head</th>
-                                <th>Type</th>
-                                <th>Debit</th>
-                                <th>Credit</th>
+                                <th className='text-center'>Date</th>
+                                <th className='text-center'>Account Head</th>
+                                <th className='text-center'>Type</th>
+                                <th className='text-center'>Debit</th>
+                                <th className='text-center'>Credit</th>
                             </tr>
                         </thead>
                         <tbody>
                             {list && list.map((obj, index) => {
                                 return (
                                     <tr>
-                                        <td id={obj.id}>
+                                        <td id={obj.id} className='text-center'>
                                             <Link
                                                 key={obj.id}
                                                 style={{ "text-decoration": "none" }}
@@ -344,11 +344,13 @@ function Ledger() {
                                         <td>
                                             {obj.accHead}
                                             <br />
+                                            {obj.narr} 
+                                            <br />
                                             Balance: {obj.runningBal}
                                         </td>
-                                        <td>{obj.series}</td>
-                                        <td>{obj.debit}</td>
-                                        <td>{obj.credit}</td>
+                                        <td className='text-center'>{obj.series}</td>
+                                        <td className='text-end'>{obj.debit}</td>
+                                        <td className='text-end'>{obj.credit}</td>
                                     </tr>
                                 )
                             })}

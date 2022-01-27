@@ -202,7 +202,12 @@ function AddVoucher() {
 
         await addDoc(voucherCollectionRef, docRef);
 
-        setVoucher(initialValue);
+        var obj = {...voucher};
+
+        obj.amt = 0;
+        obj.narr = "";
+
+        setVoucher(obj);
 
     }
 
